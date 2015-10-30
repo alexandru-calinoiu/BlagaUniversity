@@ -1,9 +1,11 @@
-﻿using System.Data.Entity;
+﻿using System;
+using System.Data;
 using System.Linq;
 using System.Net;
 using System.Web.Mvc;
 using BlagaUniversity.DAL;
 using BlagaUniversity.Models;
+using EntityState = System.Data.Entity.EntityState;
 
 namespace BlagaUniversity.Controllers
 {
@@ -43,13 +45,20 @@ namespace BlagaUniversity.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "ID,LastName,FirstMidName,EnrollmentDate")] Student student)
+        public ActionResult Create([Bind(Include = "LastName,FirstMidName,EnrollmentDate")] Student student)
         {
-            if (ModelState.IsValid)
+            try
             {
-                _universityContext.Students.Add(student);
-                _universityContext.SaveChanges();
-                return RedirectToAction("Index");
+                if (ModelState.IsValid)
+                {
+                    _universityContext.Students.Add(student);
+                    _universityContext.SaveChanges();
+                    return RedirectToAction("Index");
+                }
+            }
+            catch (DataException)
+            {
+                ModelState.AddModelError("", "Unable to save changes. Don't try again if you did not do something about it.");
             }
 
             return View(student);
@@ -73,26 +82,45 @@ namespace BlagaUniversity.Controllers
         // POST: Student/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
+        [HttpPost, ActionName("Edit")]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "ID,LastName,FirstMidName,EnrollmentDate")] Student student)
-        {
-            if (ModelState.IsValid)
-            {
-                _universityContext.Entry(student).State = EntityState.Modified;
-                _universityContext.SaveChanges();
-                return RedirectToAction("Index");
-            }
-            return View(student);
-        }
-
-        // GET: Student/Delete/5
-        public ActionResult Delete(int? id)
+        public ActionResult EditStudent(int? id)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
+
+            var studentToUpdate = _universityContext.Students.Find(id);
+            if (TryUpdateModel(studentToUpdate, "", new[] {"LastName", "FirstMidName", "EnrollmentDate"}))
+            {
+                try
+                {
+                    _universityContext.SaveChanges();
+                    return RedirectToAction("Index");
+                }
+                catch (DataException)
+                {
+                    ModelState.AddModelError("", "Something went wrong.");
+                }                
+            }
+
+            return View(studentToUpdate);
+        }
+
+        // GET: Student/Delete/5
+        public ActionResult Delete(int? id, bool? saveChangesError = true)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+
+            if (saveChangesError.GetValueOrDefault())
+            {
+                ViewBag.ErrorMessage = "Delete failed. Do not try this again, there is no point.";
+            }
+
             var student = _universityContext.Students.Find(id);
             if (student == null)
             {
@@ -106,9 +134,17 @@ namespace BlagaUniversity.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            var student = _universityContext.Students.Find(id);
-            _universityContext.Students.Remove(student);
-            _universityContext.SaveChanges();
+            try
+            {
+                var studentToDelete = new Student {ID = id};
+                _universityContext.Entry(studentToDelete).State = EntityState.Deleted;
+                _universityContext.SaveChanges();
+            }
+            catch (DataException)
+            {
+                return RedirectToAction("Delete", new {id, saveChangesError = true});
+            }
+
             return RedirectToAction("Index");
         }
 
