@@ -5,6 +5,7 @@ using System.Net;
 using System.Web.Mvc;
 using BlagaUniversity.DAL;
 using BlagaUniversity.Models;
+using PagedList;
 using EntityState = System.Data.Entity.EntityState;
 
 namespace BlagaUniversity.Controllers
@@ -14,9 +15,47 @@ namespace BlagaUniversity.Controllers
         private readonly UniversityContext _universityContext = new UniversityContext();
 
         // GET: Student
-        public ActionResult Index()
+        public ActionResult Index(string sortOrder, string currentSearchString, string searchString, int? page)
         {
-            return View(_universityContext.Students.ToList());
+            ViewBag.CurrentSort = sortOrder;
+            ViewBag.NameSortParam = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewBag.DateSortParam = sortOrder == "Date" ? "date_desc" : "";
+            var students = from s in _universityContext.Students select s;
+
+            if (searchString != null)
+            {
+                page = 1;
+            }
+            else
+            {
+                searchString = currentSearchString;
+            }
+
+            ViewBag.CurrentSearchString = searchString;
+
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                students =
+                    students.Where(s => s.LastName.Contains(searchString) || s.FirstMidName.Contains(searchString));
+            }
+
+            switch (sortOrder)
+            {
+                case "name_desc":
+                    students = students.OrderByDescending(s => s.LastName);
+                    break;
+                case "Date":
+                    students = students.OrderBy(s => s.EnrollmentDate);
+                    break;
+                case "date_desc":
+                    students = students.OrderByDescending(s => s.EnrollmentDate);
+                    break;
+                default:
+                    students = students.OrderBy(s => s.LastName);
+                    break;
+            }
+
+            return View(students.ToPagedList(page ?? 1, 3));
         }
 
         // GET: Student/Details/5
