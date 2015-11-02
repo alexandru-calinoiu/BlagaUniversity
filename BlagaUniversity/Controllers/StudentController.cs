@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Net;
 using System.Web.Mvc;
@@ -95,7 +96,7 @@ namespace BlagaUniversity.Controllers
                     return RedirectToAction("Index");
                 }
             }
-            catch (DataException)
+            catch (RetryLimitExceededException)
             {
                 ModelState.AddModelError("", "Unable to save changes. Don't try again if you did not do something about it.");
             }
@@ -138,7 +139,7 @@ namespace BlagaUniversity.Controllers
                     _universityContext.SaveChanges();
                     return RedirectToAction("Index");
                 }
-                catch (DataException)
+                catch (RetryLimitExceededException)
                 {
                     ModelState.AddModelError("", "Something went wrong.");
                 }                
@@ -179,7 +180,7 @@ namespace BlagaUniversity.Controllers
                 _universityContext.Entry(studentToDelete).State = EntityState.Deleted;
                 _universityContext.SaveChanges();
             }
-            catch (DataException)
+            catch (RetryLimitExceededException)
             {
                 return RedirectToAction("Delete", new {id, saveChangesError = true});
             }
