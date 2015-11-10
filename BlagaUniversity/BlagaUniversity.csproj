@@ -141,7 +141,6 @@
     <Compile Include="Controllers\StudentController.cs" />
     <Compile Include="DAL\UniversityConfiguration.cs" />
     <Compile Include="DAL\UniversityContext.cs" />
-    <Compile Include="DAL\UniversityInitializer.cs" />
     <Compile Include="DAL\UniversityInterceptorTransientError.cs" />
     <Compile Include="DAL\UniversityLoggingInterceptor.cs" />
     <Compile Include="Global.asax.cs">
@@ -170,6 +169,7 @@
     <Content Include="Content\Site.css" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
+    <None Include="Properties\PublishProfiles\BlagaU.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
