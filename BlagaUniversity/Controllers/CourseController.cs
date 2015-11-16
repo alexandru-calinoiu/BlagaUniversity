@@ -41,7 +41,7 @@ namespace BlagaUniversity.Controllers
         // GET: Course/Create
         public ActionResult Create()
         {
-            ViewBag.DepartmentID = new SelectList(_universityContext.Departments, "DepartmentID", "Name");
+            PopulateDepartmentDropDownList();
             return View();
         }
 
@@ -75,7 +75,7 @@ namespace BlagaUniversity.Controllers
             {
                 return HttpNotFound();
             }
-            ViewBag.DepartmentID = new SelectList(_universityContext.Departments, "DepartmentID", "Name", course.DepartmentID);
+            PopulateDepartmentDropDownList(course.DepartmentID);
             return View(course);
         }
 
@@ -105,6 +105,7 @@ namespace BlagaUniversity.Controllers
                 }
             }
 
+            PopulateDepartmentDropDownList(courseToUpdate.DepartmentID);
             return View(courseToUpdate);
         }
 
@@ -141,6 +142,12 @@ namespace BlagaUniversity.Controllers
                 _universityContext.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        private void PopulateDepartmentDropDownList(object selectedDepartmentID = null)
+        {
+            var departmentQuery = from d in _universityContext.Departments orderby d.Name select d;
+            ViewBag.DepartmentID = new SelectList(departmentQuery, "DepartmentID", "Name", selectedDepartmentID);
         }
     }
 }
