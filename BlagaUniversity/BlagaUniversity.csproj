@@ -175,6 +175,14 @@
     <Compile Include="Migrations\201511160859044_AddCourseForeingKey.Designer.cs">
       <DependentUpon>201511160859044_AddCourseForeingKey.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201511171408574_DepartmentSP.cs" />
+    <Compile Include="Migrations\201511171408574_DepartmentSP.Designer.cs">
+      <DependentUpon>201511171408574_DepartmentSP.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201511171412499_AddLocationToDepartment.cs" />
+    <Compile Include="Migrations\201511171412499_AddLocationToDepartment.Designer.cs">
+      <DependentUpon>201511171412499_AddLocationToDepartment.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Course.cs" />
     <Compile Include="Models\Department.cs" />
@@ -277,6 +285,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201511160859044_AddCourseForeingKey.resx">
       <DependentUpon>201511160859044_AddCourseForeingKey.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201511171408574_DepartmentSP.resx">
+      <DependentUpon>201511171408574_DepartmentSP.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201511171412499_AddLocationToDepartment.resx">
+      <DependentUpon>201511171412499_AddLocationToDepartment.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

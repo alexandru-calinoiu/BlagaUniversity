@@ -23,6 +23,9 @@ namespace BlagaUniversity.Models
         [DisplayName("Start Date")]
         public DateTime StartDate { get; set; }
 
+        [StringLength(50)]
+        public string Location { get; set; }
+
         public int? InstructorID { get; set; }
 
         public Instructor Administrator { get; set; }
