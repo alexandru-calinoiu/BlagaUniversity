@@ -66,8 +66,7 @@ namespace BlagaUniversity.Controllers
         // GET: Instructor/Create
         public ActionResult Create()
         {
-            var instructor = new Instructor();
-            instructor.Courses = new List<Course>();
+            var instructor = new Instructor {Courses = new List<Course>()};
             PopulateAssigmentCourseData(instructor);
 
             return View();
