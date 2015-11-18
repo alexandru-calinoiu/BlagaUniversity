@@ -26,6 +26,9 @@ namespace BlagaUniversity.Models
         [StringLength(50)]
         public string Location { get; set; }
 
+        [Timestamp]
+        public byte[] RowVersion { get; set; }
+
         public int? InstructorID { get; set; }
 
         public Instructor Administrator { get; set; }
