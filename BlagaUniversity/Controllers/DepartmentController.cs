@@ -1,5 +1,6 @@
 ﻿using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
 using System.Web.Mvc;
@@ -38,7 +39,7 @@ namespace BlagaUniversity.Controllers
         // GET: Department/Create
         public ActionResult Create()
         {
-            ViewBag.InstructorID = new SelectList(_universityContext.Instructors, "ID", "LastName");
+            ViewBag.InstructorID = new SelectList(_universityContext.Instructors, "ID", "FullName");
             return View();
         }
 
@@ -56,7 +57,7 @@ namespace BlagaUniversity.Controllers
                 return RedirectToAction("Index");
             }
 
-            ViewBag.InstructorID = new SelectList(_universityContext.Instructors, "ID", "LastName", department.InstructorID);
+            ViewBag.InstructorID = new SelectList(_universityContext.Instructors, "ID", "FullName", department.InstructorID);
             return View(department);
         }
 
@@ -72,7 +73,7 @@ namespace BlagaUniversity.Controllers
             {
                 return HttpNotFound();
             }
-            ViewBag.InstructorID = new SelectList(_universityContext.Instructors, "ID", "LastName", department.InstructorID);
+            ViewBag.InstructorID = new SelectList(_universityContext.Instructors, "ID", "FullName", department.InstructorID);
             return View(department);
         }
 
@@ -81,7 +82,7 @@ namespace BlagaUniversity.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost, ActionName("Edit")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> EditDepartment(int? id)
+        public async Task<ActionResult> EditDepartment(int? id, byte[] rowVersion)
         {
             if (!id.HasValue)
             {
@@ -89,13 +90,45 @@ namespace BlagaUniversity.Controllers
             }
 
             var departmentToUpdate = await _universityContext.Departments.FindAsync(id);
-            if (TryUpdateModel(departmentToUpdate, "",
-                new[] {"DepartmentID", "Name", "Budget", "StartDate", "InstructorID"}))
+            var includeProperties = new[] { "DepartmentID", "Name", "Budget", "StartDate", "InstructorID", "RowVersion" };
+
+            if (departmentToUpdate == null)
+            {
+                departmentToUpdate = new Department();
+                TryUpdateModel(departmentToUpdate, includeProperties);
+                ModelState.AddModelError(string.Empty, "Unable to save change the Department has already been deleted by another user.");
+            }
+            else if (TryUpdateModel(departmentToUpdate, includeProperties))
             {
                 try
                 {
+                    _universityContext.Entry(departmentToUpdate).OriginalValues["RowVersion"] = rowVersion;
                     await _universityContext.SaveChangesAsync();
+
                     return RedirectToAction("Index");
+                }
+                catch (DbUpdateConcurrencyException ex)
+                {
+                    var entry = ex.Entries.Single();
+                    var clientValues = (Department)entry.Entity;
+                    var databaseEntry = entry.GetDatabaseValues();
+
+                    if (databaseEntry == null)
+                    {
+                        ModelState.AddModelError(string.Empty, "Unable to save change the Department has already been deleted by another user.");
+                    }
+                    else
+                    {
+                        var databaseValues = (Department)databaseEntry.ToObject();
+
+                        if (databaseValues.Name != clientValues.Name)
+                        {
+                            ModelState.AddModelError("Name", "Current value: " + databaseValues.Name);
+                        }
+
+                        ModelState.AddModelError(string.Empty, "The record was already edit by some other user");
+                        departmentToUpdate.RowVersion = databaseValues.RowVersion;
+                    }
                 }
                 catch (RetryLimitExceededException)
                 {
@@ -103,7 +136,7 @@ namespace BlagaUniversity.Controllers
                 }
             }
 
-            ViewBag.InstructorID = new SelectList(_universityContext.Instructors, "ID", "LastName", departmentToUpdate.InstructorID);
+            ViewBag.InstructorID = new SelectList(_universityContext.Instructors, "ID", "FullName", departmentToUpdate.InstructorID);
             return View(departmentToUpdate);
         }
 

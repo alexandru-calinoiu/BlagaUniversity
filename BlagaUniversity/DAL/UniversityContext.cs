@@ -28,6 +28,7 @@ namespace BlagaUniversity.DAL
                     .ToTable("CourseInstructor"));
 
             modelBuilder.Entity<Department>().MapToStoredProcedures();
+            modelBuilder.Entity<Department>().Property(p => p.RowVersion).IsConcurrencyToken();
         }
     }
 }
