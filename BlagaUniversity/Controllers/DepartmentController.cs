@@ -1,4 +1,6 @@
-﻿using System.Data.Entity;
+﻿using System;
+using System.Data;
+using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,6 +8,7 @@ using System.Net;
 using System.Web.Mvc;
 using BlagaUniversity.DAL;
 using BlagaUniversity.Models;
+using EntityState = System.Data.Entity.EntityState;
 
 namespace BlagaUniversity.Controllers
 {
@@ -141,7 +144,7 @@ namespace BlagaUniversity.Controllers
         }
 
         // GET: Department/Delete/5
-        public async Task<ActionResult> Delete(int? id)
+        public async Task<ActionResult> Delete(int? id, bool? concurrencyError)
         {
             if (id == null)
             {
@@ -150,19 +153,40 @@ namespace BlagaUniversity.Controllers
             Department department = await FetchDepartment(id);
             if (department == null)
             {
+                if (concurrencyError.GetValueOrDefault())
+                {
+                    return RedirectToAction("Index");
+                }
                 return HttpNotFound();
             }
+
+            if (concurrencyError.GetValueOrDefault())
+            {
+                ViewBag.ConcurencyErrorMessage = "The record was already deleted or modified by some other user";
+            }
+
             return View(department);
         }
 
         // POST: Department/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> DeleteConfirmed(int id)
+        public async Task<ActionResult> DeleteConfirmed(Department department)
         {
-            Department department = await _universityContext.Departments.FindAsync(id);
-            _universityContext.Departments.Remove(department);
-            await _universityContext.SaveChangesAsync();
+            try
+            {
+                _universityContext.Entry(department).State = EntityState.Deleted;
+                await _universityContext.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return RedirectToAction("Delete", new {concurrencyError = true, id = department.DepartmentID});
+            }
+            catch (DataException)
+            {
+                ModelState.AddModelError(string.Empty, "Unable to delete");
+            }
+
             return RedirectToAction("Index");
         }
 
